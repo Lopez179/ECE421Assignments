@@ -14,9 +14,11 @@ Returns a list where all positions have the same values of moved_list, except th
 ### Part B
 ```cargo run --package Q2```
 
+Code is inside Q2/src/main.rs
 ## Question 3
 ```cargo run --package Q3```
 
+Code is inside Q3/src/main.rs
 ## Question 4
 ### Part A
 The code is creating DoubleNode instances and then wrapping them in reference counted, mutable reference smart pointers. Rc makes the pointer reference counted, while RefCell adds interior mutability. The code then prints the number of strong references, which is the amount of references that need to be dropped before the actual value is dropped.
@@ -38,5 +40,6 @@ Is necessary to access the value of an option, and get a mutable reference to a.
 This assigns a weak pointer to b to the prev field of a.
 
 ## Question 5
+```cargo run --package Q5```
 
-
+Code is inside Q5/src/main.rs
