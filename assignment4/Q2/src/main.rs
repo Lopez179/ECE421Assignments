@@ -68,6 +68,9 @@ mod tests {
     }
 }
 
+//cons(value_a, moved_list)
+//Returns a list where all positions have the same values of moved_list, except there's a new position that holds value_a.
+
 fn main() {
     
 }
