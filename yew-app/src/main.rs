@@ -123,7 +123,7 @@ fn app() -> Html {
                 <table id="calcu">
                     <tr>
                         <td colspan="3"><input type="text" id="result" value={(*result).clone()} /></td>
-                        <td><input type="button" value="c" onclick={clr.clone()} /></td>
+                        <td><input type="button" value="c" onclick={clr.clone()} onkeydown={onkeydown.clone()} /></td>
                     </tr>
                     <tr>
                         <td><input type="button" value="1" onclick={onclick("1")} onkeydown={onkeydown.clone()}/></td>

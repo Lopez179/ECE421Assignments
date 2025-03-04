@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en">
-    <head><link rel="modulepreload" href="/yew-app-7af5e4a6bc962861.js" crossorigin=anonymous integrity="sha384-nm2GJPiCsv6sggWkRNZdVhF6e91Zn5uoXtIUb0TwaHJBmBZMGx1lmRQMB4h+nXZp"><link rel="preload" href="/yew-app-7af5e4a6bc962861_bg.wasm" crossorigin=anonymous integrity="sha384-34jcbKYKBEzsgHOmC2tjimlhesKT6k0Igxq7qyHGItpSv3SryH7xsMdyx0AoaXg6" as="fetch" type="application/wasm"></head>
+    <head><link rel="modulepreload" href="/yew-app-bc6bce13016e7caf.js" crossorigin="anonymous" integrity="sha384-ODopqzUexx+jToKXHZy2nosWlhRghK8Q7qWyEe1xWVpOpkeoU1eG06yFqfqEbDWI"><link rel="preload" href="/yew-app-bc6bce13016e7caf_bg.wasm" crossorigin="anonymous" integrity="sha384-xH430A7GLHd0p8NLNWpP7P4U6qHVL0NsMOwhuZJ3e9nYDFexKsetqFGIuLicPB/4" as="fetch" type="application/wasm"></head>
     <body>
-<script type="module" nonce="SmlJruB6x1q7ByR8W5fibA==">
-import init, * as bindings from '/yew-app-7af5e4a6bc962861.js';
-const wasm = await init({ module_or_path: '/yew-app-7af5e4a6bc962861_bg.wasm' });
+<script type="module">
+import init, * as bindings from '/yew-app-bc6bce13016e7caf.js';
+const wasm = await init({ module_or_path: '/yew-app-bc6bce13016e7caf_bg.wasm' });
 
 
 window.wasmBindings = bindings;
@@ -104,7 +104,7 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
                         break;
                 }
             };
-            ws.onclose = this.onclose;
+            ws.onclose = () => this.onclose();
         }
 
         onclose() {
@@ -116,7 +116,7 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
                     // rebuilt on restart)
                     const ws = new WebSocket(this.url);
                     ws.onopen = () => window.location.reload();
-                    ws.onclose = this.onclose;
+                    ws.onclose = () => this.onclose();
                 },
                 this.poll_interval);
         }
