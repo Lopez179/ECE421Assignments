@@ -9,11 +9,20 @@ fn app() -> Html {
     let onclick = |val: &'static str| {
         let result = result.clone();
         Callback::from(move |_| {
+
             let key: String = val.to_string();
-            let char = key.chars().next().unwrap();
-            let mut new_text = (*result).clone();
-            new_text.push(char);
-            result.set(new_text);
+
+            if key == "ln" {
+                let current_text = (*result).clone();
+                let new_text = format!("ln({})", current_text);
+                result.set(new_text);
+            }
+            else {
+                let char = key.chars().next().unwrap();
+                let mut new_text = (*result).clone();
+                new_text.push(char);
+                result.set(new_text);
+            }
             
         })
     };
@@ -22,10 +31,23 @@ fn app() -> Html {
         let result = result.clone();
         Callback::from(move |e: KeyboardEvent| {
             let key: String = e.key();
-            let char = key.chars().next().unwrap();
-            if char == '1' || char == '2' || char == '3' || char == '4' || char == '5' || char == '6' || char == '7' || char == '8' || char == '9' || char == '0' || char == '+' || char == '-' || char == '*' || char == '/' {
-                let mut new_text = (*result).clone();
-                new_text.push(char);
+            if ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "+", "-", "*", "/"].contains(&key.as_str()) {
+                let mut current_text = (*result).clone();
+                current_text.push_str(&e.key());
+                result.set(current_text);
+            }
+            else if ["Enter"].contains(&key.as_str()) {
+                e.prevent_default();
+                let expression_str = (*result).clone();
+                let soltion = eval_str(expression_str);
+                match &soltion {
+                    Ok(sol) => {result.set(sol.to_string())},
+                    Err(_e) => {println!("idk")},
+                }
+            }
+            else if ["l"].contains(&key.as_str()){
+                let current_text = (*result).clone();
+                let new_text = format!("ln({})", current_text);
                 result.set(new_text);
             }
         })
@@ -38,7 +60,7 @@ fn app() -> Html {
             let soltion = eval_str(expression_str);
             match &soltion {
                 Ok(sol) => {result.set(sol.to_string())},
-                Err(e) => {},
+                Err(_e) => {println!("idk")},
             }
         })
     };
@@ -94,7 +116,9 @@ fn app() -> Html {
             </head>
 
             <body>
-                <img src="/images/calculatorimg.jpg" alt="Logo" />
+                <div style="display: flex; justify-content: center;">
+                    <img src="https://media1.tenor.com/m/YxapSm-nLs8AAAAd/brah-wtf-brah.gif" alt="Logo" />
+                </div>
                 //<!-- Use Table to Create Calculator Structure Design -->
                 <table id="calcu">
                     <tr>
@@ -102,28 +126,31 @@ fn app() -> Html {
                         <td><input type="button" value="c" onclick={clr.clone()} /></td>
                     </tr>
                     <tr>
-                        <td><input type="button" value="lol" onclick={onclick("1")} onkeydown={onkeydown.clone()}/></td>
+                        <td><input type="button" value="1" onclick={onclick("1")} onkeydown={onkeydown.clone()}/></td>
                         <td><input type="button" value="2" onclick={onclick("2")} onkeydown={onkeydown.clone()}/></td>
                         <td><input type="button" value="3" onclick={onclick("3")} onkeydown={onkeydown.clone()}/></td>
                         <td><input type="button" value="/" onclick={onclick("/")} onkeydown={onkeydown.clone()}/></td>
+                        <td><input type="button" value="ln" onclick={onclick("ln")} onkeydown={onkeydown.clone()}/></td>
                     </tr>
                     <tr>
                         <td><input type="button" value="4" onclick={onclick("4")} onkeydown={onkeydown.clone()}/></td>
                         <td><input type="button" value="5" onclick={onclick("5")} onkeydown={onkeydown.clone()}/></td>
                         <td><input type="button" value="6" onclick={onclick("6")} onkeydown={onkeydown.clone()}/></td>
                         <td><input type="button" value="*" onclick={onclick("*")} onkeydown={onkeydown.clone()}/></td>
+                        <td><input type="button" value="^" onclick={onclick("^")} onkeydown={onkeydown.clone()}/></td>
                     </tr>
                     <tr>
                     <td><input type="button" value="7" onclick={onclick("7")} onkeydown={onkeydown.clone()}/></td>
                     <td><input type="button" value="8" onclick={onclick("8")} onkeydown={onkeydown.clone()}/></td>
                     <td><input type="button" value="9" onclick={onclick("9")} onkeydown={onkeydown.clone()}/></td>
                     <td><input type="button" value="-" onclick={onclick("-")} onkeydown={onkeydown.clone()}/></td>
+                    <td><input type="button" value="%" onclick={onclick("%")} onkeydown={onkeydown.clone()}/></td>
                     </tr>
                     <tr>
                     <td><input type="button" value="0" onclick={onclick("0")} onkeydown={onkeydown.clone()}/></td>
                     <td><input type="button" value="." onclick={onclick(".")} onkeydown={onkeydown.clone()}/></td>
                     //<!-- solve function call function solve to evaluate value -->
-                        <td><input type="button" value="=" onclick={solve}/></td>
+                        <td><input type="button" value="=" onclick={solve} onkeydown={onkeydown.clone()}/></td>
                         <td><input type="button" value="+" onclick={onclick("+")} onkeydown={onkeydown.clone()}/></td>
                         </tr>
                 </table>
