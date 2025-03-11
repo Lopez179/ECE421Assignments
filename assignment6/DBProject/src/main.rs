@@ -1,8 +1,9 @@
 use std::thread::current;
-
+use std::env;
 use bcrypt::{DEFAULT_COST, hash, verify, BcryptError};
 use sqlite::{Connection, Error as SqErr, State};
 use chrono::Utc;
+use std::io::{self, Write};
 
 pub struct UserBase{
     fname:String,
@@ -141,6 +142,36 @@ impl UserBase{
         Ok(balance)
     }
 
+    fn get_password(&self, u_name:&str) -> Result<i64,UBaseErr> {
+        let conn=sqlite::open(&self.fname)?;
+        
+        let mut balance  = 1000;
+
+        let mut statement = conn.prepare("
+            SELECT t_amount
+            FROM transactions
+            WHERE u_from = ?
+        ")?;
+        let _ = statement.bind(1, u_name);
+        while let State::Row = statement.next()? {
+            let amount: i64 = statement.read(0)?;
+            balance -= amount;
+        }
+
+        let mut statement = conn.prepare("
+            SELECT t_amount
+            FROM transactions
+            WHERE u_to = ?
+        ")?;
+        let _ = statement.bind(1, u_name);
+        while let State::Row = statement.next()? {
+            let amount: i64 = statement.read(0)?;
+            balance += amount;
+        }
+
+        Ok(balance)
+    }
+
 }
 
 fn test_pay() {
@@ -164,15 +195,35 @@ fn test_history() {
     db.delete_user("testuser2").unwrap();
 }
 
+fn prompt_password() -> bool {
+    let mut input = String::new();
+    print!("Password: ");
+    io::stdout().flush().unwrap();
+    io::stdin().read_line(&mut input).unwrap();
+    input = input.trim().to_string();
+    
+
+
+    return true;
+}
+
 // Should return:
 // Too poor
 // testuser1 sent $1000 to testuser2 on [close to current time] UTC
 // testuser1 recieved $500 from testuser2 on [close to current time] UTC
 // 
 fn main() {
-    //let db = UserBase {fname: "data/users.db".to_string()};
-    //db.pay("Dave", "Matt", 800).unwrap();
-    //db.get_transactions_history("Dave").unwrap();
-    test_pay();
-    test_history();
+    let args: Vec<String> = env::args().collect();
+
+    let db = UserBase {fname: "data/users.db".to_string()};
+
+    if args[1] == "new" {
+        db.add_user(&args[2], &args[3]).unwrap();
+    }
+    else if args[1] == "transfer" {
+        println!("transfer money");
+    }
+    else if args[1] == "balance" {
+        println!("get amount");
+    }
 }
