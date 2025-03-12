@@ -1,6 +1,5 @@
-use std::thread::current;
 use std::env;
-use bcrypt::{DEFAULT_COST, hash, verify, BcryptError};
+use bcrypt::{DEFAULT_COST, verify, BcryptError};
 use sqlite::{Connection, Error as SqErr, State};
 use chrono::Utc;
 use std::io::{self, Write};
@@ -89,7 +88,7 @@ impl UserBase{
             let date: i64 = statement.read(2)?;
             let amount: i64 = statement.read(3)?;
 
-            let datetime = Utc::now();
+            let datetime = chrono::DateTime::from_timestamp(date, 0).expect("Invalid timestamp");
 
             println!("{} sent ${} to {} on {}", sender, amount, reciever, datetime);
         }
@@ -106,7 +105,7 @@ impl UserBase{
             let date: i64 = statement.read(2)?;
             let amount: i64 = statement.read(3)?;
 
-            let datetime = Utc::now();
+            let datetime = chrono::DateTime::from_timestamp(date, 0).expect("Invalid timestamp");
 
             println!("{} recieved ${} from {} on {}", reciever, amount, sender, datetime);
         }
@@ -142,9 +141,8 @@ impl UserBase{
         Ok(balance)
     }
 
-    fn get_password(&self, u_name:&str) -> Result<i64,UBaseErr> {
+    fn balance(&self, u_name:&str) -> Result<i64,UBaseErr> {
         let conn=sqlite::open(&self.fname)?;
-        
         let mut balance  = 1000;
 
         let mut statement = conn.prepare("
@@ -172,6 +170,22 @@ impl UserBase{
         Ok(balance)
     }
 
+    fn get_password(&self, u_name:&str) -> Result<String,UBaseErr> {
+        let conn=sqlite::open(&self.fname)?;
+        let mut password = String::new();
+        let mut statement = conn.prepare("
+            SELECT p_word
+            FROM users
+            WHERE u_name = ?
+        ")?;
+        let _ = statement.bind(1, u_name);
+        while let State::Row = statement.next()? {
+            password = statement.read(0)?;
+        }
+
+        Ok(password)
+    }
+
 }
 
 fn test_pay() {
@@ -195,35 +209,25 @@ fn test_history() {
     db.delete_user("testuser2").unwrap();
 }
 
-fn prompt_password() -> bool {
+fn prompt_password(u_name: &str, db: &UserBase) -> Result<bool, BcryptError> {
     let mut input = String::new();
-    print!("Password: ");
+    let expected = db.get_password(u_name).unwrap();
+
+    print!("Please input your password: ");
     io::stdout().flush().unwrap();
     io::stdin().read_line(&mut input).unwrap();
     input = input.trim().to_string();
     
+    let is_valid = verify(input, &expected);
 
-
-    return true;
+    is_valid
 }
 
-// Should return:
+// Should print:
 // Too poor
-// testuser1 sent $1000 to testuser2 on [close to current time] UTC
-// testuser1 recieved $500 from testuser2 on [close to current time] UTC
-// 
+// testuser1 sent $1000 to testuser2 on 1970-01-01 00:33:45 UTC
+// testuser1 recieved $500 from testuser2 on 1970-01-01 00:33:45 UTC
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    let db = UserBase {fname: "data/users.db".to_string()};
-
-    if args[1] == "new" {
-        db.add_user(&args[2], &args[3]).unwrap();
-    }
-    else if args[1] == "transfer" {
-        println!("transfer money");
-    }
-    else if args[1] == "balance" {
-        println!("get amount");
-    }
+    test_pay();
+    test_history();
 }
