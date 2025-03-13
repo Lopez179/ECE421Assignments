@@ -1,8 +1,5 @@
-use std::env;
-use bcrypt::{DEFAULT_COST, verify, BcryptError};
+use bcrypt::{DEFAULT_COST, BcryptError};
 use sqlite::{Connection, Error as SqErr, State};
-use chrono::Utc;
-use std::io::{self, Write};
 
 pub struct UserBase{
     fname:String,
@@ -141,36 +138,7 @@ impl UserBase{
         Ok(balance)
     }
 
-    fn balance(&self, u_name:&str) -> Result<i64,UBaseErr> {
-        let conn=sqlite::open(&self.fname)?;
-        let mut balance  = 1000;
-
-        let mut statement = conn.prepare("
-            SELECT t_amount
-            FROM transactions
-            WHERE u_from = ?
-        ")?;
-        let _ = statement.bind(1, u_name);
-        while let State::Row = statement.next()? {
-            let amount: i64 = statement.read(0)?;
-            balance -= amount;
-        }
-
-        let mut statement = conn.prepare("
-            SELECT t_amount
-            FROM transactions
-            WHERE u_to = ?
-        ")?;
-        let _ = statement.bind(1, u_name);
-        while let State::Row = statement.next()? {
-            let amount: i64 = statement.read(0)?;
-            balance += amount;
-        }
-
-        Ok(balance)
-    }
-
-    fn get_password(&self, u_name:&str) -> Result<String,UBaseErr> {
+    fn _get_password(&self, u_name:&str) -> Result<String,UBaseErr> {
         let conn=sqlite::open(&self.fname)?;
         let mut password = String::new();
         let mut statement = conn.prepare("
@@ -188,46 +156,44 @@ impl UserBase{
 
 }
 
-fn test_pay() {
-    let db = UserBase {fname: "data/users.db".to_string()};
-    db.add_user("testuser1", "testpassword").unwrap();
-    db.add_user("testuser2", "testpassword").unwrap();
-    db.pay("testuser1", "testuser2", 1000).unwrap();
-    db.pay("testuser1", "testuser2", 1000).unwrap();
-    db.delete_user("testuser1").unwrap();
-    db.delete_user("testuser2").unwrap();
+#[cfg(test)]
+mod tests {
+    use super::*; // Import the main module
+    use serial_test::serial; // Import the serial attribute
+
+
+    #[test]
+    #[serial]
+    fn test_pay() {
+        let db = UserBase { fname: "data/users.db".to_string() };
+
+        assert!(db.add_user("testuser1", "testpassword").is_ok());
+        assert!(db.add_user("testuser2", "testpassword").is_ok());
+
+        assert!(db.pay("testuser1", "testuser2", 1000).is_ok());
+        assert!(db.pay("testuser1", "testuser2", 1000).is_ok());
+
+        assert!(db.delete_user("testuser1").is_ok());
+        assert!(db.delete_user("testuser2").is_ok());
+    }
+
+    #[test]
+    #[serial]
+    fn test_history() {
+        let db = UserBase { fname: "data/users.db".to_string() };
+
+        assert!(db.add_user("testuser1", "testpassword").is_ok());
+        assert!(db.add_user("testuser2", "testpassword").is_ok());
+
+        assert!(db.pay("testuser1", "testuser2", 1000).is_ok());
+        assert!(db.pay("testuser2", "testuser1", 500).is_ok());
+        let history = db.get_transactions_history("testuser1");
+        assert!(history.is_ok());
+
+        assert!(db.delete_user("testuser1").is_ok());
+        assert!(db.delete_user("testuser2").is_ok());
+    }
 }
 
-fn test_history() {
-    let db = UserBase {fname: "data/users.db".to_string()};
-    db.add_user("testuser1", "testpassword").unwrap();
-    db.add_user("testuser2", "testpassword").unwrap();
-    db.pay("testuser1", "testuser2", 1000).unwrap();
-    db.pay("testuser2", "testuser1", 500).unwrap();
-    db.get_transactions_history("testuser1").unwrap();
-    db.delete_user("testuser1").unwrap();
-    db.delete_user("testuser2").unwrap();
-}
-
-fn prompt_password(u_name: &str, db: &UserBase) -> Result<bool, BcryptError> {
-    let mut input = String::new();
-    let expected = db.get_password(u_name).unwrap();
-
-    print!("Please input your password: ");
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut input).unwrap();
-    input = input.trim().to_string();
-    
-    let is_valid = verify(input, &expected);
-
-    is_valid
-}
-
-// Should print:
-// Too poor
-// testuser1 sent $1000 to testuser2 on 1970-01-01 00:33:45 UTC
-// testuser1 recieved $500 from testuser2 on 1970-01-01 00:33:45 UTC
 fn main() {
-    test_pay();
-    test_history();
 }
