@@ -106,6 +106,18 @@ fn create_points_from_inputs() -> (Point, Point) {
     (p1, p2)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*; // Import everything from the parent module
+
+    #[test]
+    fn test_addition() {
+        let p1 = Point {x: 5, y: 7};
+        let p2 = Point {x: 8, y: 11};
+        assert_eq!(compute_euclidean_distance(&p1, &p2), 5.0);
+    }
+}
+
 fn main() {
     full_test_loop();
 }
