@@ -29,8 +29,10 @@ fn test_run_serial(size: u32) {
     //println!("The average age of people older than 30 is {}", avg_over_30);
 }
 fn criterion_benchmark(c: &mut Criterion) {
+    c.bench_function("ser iter 1000",|b| b.iter(|| test_run_serial(1000)));
+    c.bench_function("ser iter 10000",|b| b.iter(|| test_run_serial(10000)));
     c.bench_function("ser iter 100000",|b| b.iter(|| test_run_serial(100000)));
-    c.bench_function("par iter 100000",|b| b.iter(|| test_run_parallel(100000)));
+    c.bench_function("ser iter 1000000",|b| b.iter(|| test_run_serial(1000000)));
 }
 
 criterion_group!(benches, criterion_benchmark);
