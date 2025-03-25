@@ -1,8 +1,0 @@
-[package]
-name = "Assignment7_Q4"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-rayon = "1.10.0"
-crossbeam = "0.8"
