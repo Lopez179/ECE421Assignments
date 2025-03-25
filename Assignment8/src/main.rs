@@ -38,12 +38,17 @@ async fn read_cmd() -> Result<usize, Box<dyn std::error::Error>> {
 }
 
 async fn periodic_task(interval: u64) {
-    sleep(Duration::from_secs(interval)).await;
-    println!("UTC now: {}", Utc::now());
+    loop {
+        sleep(Duration::from_secs(interval)).await;
+        println!("UTC now: {}", Utc::now());
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    tokio::spawn(periodic_task(5));
+
     loop {
         match read_cmd().await {
             Ok(len) => {
@@ -53,7 +58,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             Err(e) => println!("input error {}", e),
         }
-        periodic_task(5).await;
     }
 
     Ok(())
